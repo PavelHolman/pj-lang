@@ -1,0 +1,14 @@
+def foo(x <- Int, y <-> String) -> Int | String:
+    return if x > 5 then x else y;
+
+let x = 2 + 2 - 1;
+let y = "str";
+let z = foo(x, y);
+
+print(x, y, z);
+
+x = 10 * 2 // 3;
+y = "foobar";
+z = foo(x, y);
+
+print(x, y, z);

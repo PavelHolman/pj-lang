@@ -4,8 +4,6 @@ use std::iter::Fuse;
 use std::str::Chars;
 use crate::token::Token;
 
-pub fn tokenize(contents: &str) -> Vec<Token> {
-    todo!()
 struct Lexer<'a> {
     chars: Fuse<Chars<'a>>,
     buffer: VecDeque<char>,
@@ -48,6 +46,125 @@ impl<'a> Lexer<'a> {
     }
 
     fn lex_token(&mut self) -> Result<Option<Token>, Box<dyn Error>> {
+        self.consume_white_spaces();
+        Ok(self.peek().map(|ch| match ch {
+            '_' | 'a'..='z' | 'A'..='Z' => self.lex_ident(),
+            '0'..='9' => self.lex_number(),
+            '\'' | '\"' => self.lex_string(),
+            _ => self.lex_special(),
+        }))
+    }
+
+    fn lex_ident(&mut self) -> Token {
+        let mut ident = String::new();
+
+        while let ch = self.peek().expect("TODO") {
+            if !ch.is_alphanumeric() && ch != '_' { break; }
+            ident.push(self.consume().unwrap())
+        }
+
+        match ident.as_str() {
+            "true" => Token::Bool(true),
+            "false" => Token::Bool(false),
+
+            "let" => Token::Let,
+            "def" => Token::Def,
+            "return" => Token::Return,
+            "if" => Token::If,
+            "then" => Token::Then,
+            "else" => Token::Else,
+
+            "not" => Token::Not,
+            "or" => Token::Or,
+            "and" => Token::And,
+
+            _ => Token::Identifier(ident),
+        }
+    }
+
+    fn lex_number(&mut self) -> Token {
+        let mut number = String::new();
+        let mut found_dot = false;
+
+        while let ch = self.peek().expect("TODO") {
+            if !found_dot && ch == '.' {
+                found_dot = true;
+            } else if !ch.is_numeric() && ch != '_' { break; }
+            number.push(self.consume().unwrap());
+        }
+
+        if found_dot {
+            Token::Float(number.parse::<f64>().expect("TODO"))
+        } else {
+            Token::Int(number.parse::<i64>().expect("TODO"))
+        }
+    }
+
+    fn lex_string(&mut self) -> Token {
+        let mut str = String::new();
+
+        let quote = self.consume().unwrap();
+
+        while let ch = self.consume().expect("TODO") {
+            if ch == '\\' {
+                str.push(ch);
+                str.push(self.consume().expect("TODO"));
+                continue;
+            }
+
+            if ch == quote { break; }
+
+            str.push(ch)
+        }
+
+        Token::String(str)
+    }
+
+    fn lex_special(&mut self) -> Token {
+        match self.consume().unwrap() {
+            '=' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('=') { Token::EqualEqual } else { Token::Equal }
+            }
+            '+' => Token::Plus,
+            '-' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('>') { Token::RArrow } else { Token::Minus }
+            }
+            '*' => Token::Star,
+            '/' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('/') { Token::SlashSlash } else { Token::Slash }
+            }
+            '%' => Token::Percent,
+            '!' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('=') { Token::NotEqual } else { Token::Not }
+            }
+            '<' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('=') { return Token::LessEqual; }
+                if !self.consume_if_next('-') { return Token::Less; }
+                self.consume_white_spaces();
+                if self.consume_if_next('>') { Token::LRArrow } else { Token::LArrow }
+            }
+            '>' => {
+                self.consume_white_spaces();
+                if self.consume_if_next('=') { Token::GreaterEqual } else { Token::Greater }
+            }
+            '.' => Token::Dot,
+            '|' => Token::Pipe,
+            ',' => Token::Comma,
+            ':' => Token::Colon,
+            ';' => Token::Semicolon,
+            '(' => Token::LParen,
+            ')' => Token::RParen,
+            '[' => Token::LBracket,
+            ']' => Token::RBracket,
+            '{' => Token::LBrace,
+            '}' => Token::RBrace,
+            _ => todo!(),
+        }
     }
 }
 

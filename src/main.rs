@@ -4,7 +4,6 @@ mod compiler;
 
 use std::error::Error;
 use std::{env, fs};
-use log::debug;
 
 fn compile(source_code: &str) -> Result<Vec<u8>, Box<dyn Error>> {
     let tokens = lexer::lex(&source_code)?;

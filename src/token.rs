@@ -1,4 +1,4 @@
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Token {
     // Names
     Identifier(String),
@@ -54,9 +54,6 @@ pub enum Token {
     LArrow,
     LRArrow,
     RArrow,
-
-    // Special characters
-    EndOfFile,
 }
 
 impl std::fmt::Display for Token {
@@ -110,8 +107,6 @@ impl std::fmt::Display for Token {
             Token::LArrow => f.write_str("<-"),
             Token::LRArrow => f.write_str("<->"),
             Token::RArrow => f.write_str("->"),
-
-            Token::EndOfFile => f.write_str("EOF"),
         }
     }
 }

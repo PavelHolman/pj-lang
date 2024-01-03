@@ -6,6 +6,14 @@ use std::error::Error;
 use std::{env, fs};
 use log::debug;
 
+fn compile(source_code: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    let tokens = lexer::lex(&source_code)?;
+
+    let ast = parser::parse(&tokens)?;
+
+    Ok(compiler::compile(&ast)?)
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args = env::args().collect::<Vec<String>>();
 
@@ -14,13 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let source_code = fs::read_to_string(in_file_path)?;
 
-    let tokens = lexer::tokenize(&source_code);
-    debug!("{tokens:?}");
-
-    let ast = parser::parse(&tokens);
-    debug!("{ast:?}");
-
-    let compiled = compiler::compile(&ast);
+    let compiled = compile(&source_code)?;
     fs::write(out_file_path, compiled)?;
 
     Ok(())

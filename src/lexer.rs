@@ -4,6 +4,7 @@ use std::iter::Fuse;
 use std::str::Chars;
 use crate::token::Token;
 
+// TODO: Encapsulate chars and buffer, take utility methods
 struct Lexer<'a> {
     chars: Fuse<Chars<'a>>,
     buffer: VecDeque<char>,
@@ -14,6 +15,7 @@ impl<'a> Lexer<'a> {
         Self { chars: source_code.chars().fuse(), buffer: VecDeque::new() }
     }
 
+    // TODO: next()?
     fn consume(&mut self) -> Option<char> {
         if !self.buffer.is_empty() {
             self.buffer.pop_front()
@@ -22,21 +24,25 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    // TODO: skip_while()?
     fn consume_white_spaces(&mut self) -> () {
         while self.peek().map_or(false, |ch| ch.is_whitespace()) { self.consume(); }
     }
 
+    // TODO: next_if_eq()?
     fn consume_if_next(&mut self, ch: char) -> bool {
-        if self.peek().expect("TODO") == ch {
+        if self.peek().expect(/* TODO */"") == ch {
             self.consume().unwrap();
             true
         } else { false }
     }
 
+    // TODO: Maybe not necessary, instead have last char buffer?
     fn peek(&mut self) -> Option<char> {
         self.peek_nth(0)
     }
 
+    // TODO: Not necessary now, remove?
     fn peek_nth(&mut self, n: usize) -> Option<char> {
         while !(n < self.buffer.len()) {
             self.buffer.push_back(self.chars.next()?);
@@ -58,7 +64,7 @@ impl<'a> Lexer<'a> {
     fn lex_ident(&mut self) -> Token {
         let mut ident = String::new();
 
-        while let ch = self.peek().expect("TODO") {
+        while let ch = self.peek().expect(/* TODO */"") {
             if !ch.is_alphanumeric() && ch != '_' { break; }
             ident.push(self.consume().unwrap())
         }
@@ -86,7 +92,7 @@ impl<'a> Lexer<'a> {
         let mut number = String::new();
         let mut found_dot = false;
 
-        while let ch = self.peek().expect("TODO") {
+        while let ch = self.peek().expect(/* TODO */"") {
             if !found_dot && ch == '.' {
                 found_dot = true;
             } else if !ch.is_numeric() && ch != '_' { break; }
@@ -94,9 +100,9 @@ impl<'a> Lexer<'a> {
         }
 
         if found_dot {
-            Token::Float(number.parse::<f64>().expect("TODO"))
+            Token::Float(number.parse::<f64>().expect(/* TODO */""))
         } else {
-            Token::Int(number.parse::<i64>().expect("TODO"))
+            Token::Int(number.parse::<i64>().expect(/* TODO */""))
         }
     }
 
@@ -105,10 +111,10 @@ impl<'a> Lexer<'a> {
 
         let quote = self.consume().unwrap();
 
-        while let ch = self.consume().expect("TODO") {
+        while let ch = self.consume().expect(/* TODO */"") {
             if ch == '\\' {
                 str.push(ch);
-                str.push(self.consume().expect("TODO"));
+                str.push(self.consume().expect(/* TODO */""));
                 continue;
             }
 
@@ -169,9 +175,9 @@ impl<'a> Lexer<'a> {
 }
 
 pub fn lex(source_code: &str) -> Result<Vec<Token>, Box<dyn Error>> {
-    let mut lexer = Lexer::new(source_code);
     let mut tokens = Vec::<Token>::new();
 
+    let mut lexer = Lexer::new(source_code);
     while let Some(token) = lexer.lex_token()? { tokens.push(token); }
 
     Ok(tokens)

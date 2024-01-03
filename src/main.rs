@@ -1,6 +1,7 @@
 mod lexer;
 mod parser;
 mod compiler;
+mod token;
 
 use std::error::Error;
 use std::{env, fs};

@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum Token {}
+use crate::token::Token;
 
 pub fn tokenize(contents: &str) -> Vec<Token> {
     todo!()

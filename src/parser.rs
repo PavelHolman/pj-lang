@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::lexer::Token;
+use crate::token::Token;
 
 #[derive(Debug)]
 pub struct AST {}

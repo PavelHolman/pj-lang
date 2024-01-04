@@ -1,59 +1,105 @@
-use std::collections::VecDeque;
 use std::error::Error;
-use std::iter::Fuse;
+use std::iter::{Fuse, Peekable};
 use std::str::Chars;
 use crate::token::Token;
 
-// TODO: Encapsulate chars and buffer, take utility methods
-struct Lexer<'a> {
-    chars: Fuse<Chars<'a>>,
-    buffer: VecDeque<char>,
+trait PeekIterator {
+    type Item;
+
+    fn peek(&mut self) -> Option<Self::Item>;
 }
 
-impl<'a> Lexer<'a> {
-    fn new(source_code: &'a str) -> Self {
-        Self { chars: source_code.chars().fuse(), buffer: VecDeque::new() }
-    }
+struct CharIter<'a> {
+    inner: Peekable<Fuse<Chars<'a>>>,
+    ch: Option<char>,
+    line: usize,
+    col: usize,
+}
 
-    // TODO: next()?
-    fn consume(&mut self) -> Option<char> {
-        if !self.buffer.is_empty() {
-            self.buffer.pop_front()
-        } else {
-            self.chars.next()
+impl Iterator for CharIter<'_> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let ch = self.inner.next();
+        if let Some(ch) = ch {
+            self.col += 1;
+            if ch == '\n' {
+                self.col = 1;
+                self.line += 1;
+            }
+        }
+
+        ch
+    }
+}
+
+impl PeekIterator for CharIter<'_> {
+    type Item = char;
+
+    fn peek(&mut self) -> Option<Self::Item> {
+        self.inner.peek().copied()
+    }
+}
+
+
+pub(crate) struct LexIter<'a> {
+    chars: CharIter<'a>,
+    next_res: Option<Result<Token, Box<dyn Error>>>,
+}
+
+impl Iterator for LexIter<'_> {
+    type Item = Result<Token, Box<dyn Error>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.lex_token()
+    }
+}
+
+impl PeekIterator for LexIter<'_> {
+    type Item = Result<Token, Box<dyn Error>>;
+
+    fn peek(&mut self) -> Option<Self::Item> {
+        // self.next_res.or(self.next())
+        todo!()
+    }
+}
+
+
+impl<'a> LexIter<'a> {
+    pub fn new(source_code: &'a str) -> Self {
+        Self {
+            chars: CharIter {
+                inner: source_code.chars().fuse().peekable(),
+                ch: None,
+                line: 1,
+                col: 0,
+            },
+            next_res: None,
         }
     }
 
-    // TODO: skip_while()?
-    fn consume_white_spaces(&mut self) -> () {
-        while self.peek().map_or(false, |ch| ch.is_whitespace()) { self.consume(); }
+    fn peek_char(&mut self) -> Option<char> {
+        self.chars.peek()
     }
 
-    // TODO: next_if_eq()?
-    fn consume_if_next(&mut self, ch: char) -> bool {
-        if self.peek().expect(/* TODO */"") == ch {
-            self.consume().unwrap();
+    fn consume_char(&mut self) -> Option<char> {
+        self.chars.next()
+    }
+
+    fn consume_white_spaces(&mut self) -> () {
+        while self.chars.peek().map_or(false, char::is_whitespace) { self.chars.next(); }
+    }
+
+    fn consume_if_eq(&mut self, ch: char) -> bool {
+        if self.peek_char().expect(/* TODO */"") == ch {
+            self.consume_char().unwrap();
             true
         } else { false }
     }
 
-    // TODO: Maybe not necessary, instead have last char buffer?
-    fn peek(&mut self) -> Option<char> {
-        self.peek_nth(0)
-    }
-
-    // TODO: Not necessary now, remove?
-    fn peek_nth(&mut self, n: usize) -> Option<char> {
-        while !(n < self.buffer.len()) {
-            self.buffer.push_back(self.chars.next()?);
-        }
-
-        Some(self.buffer[n])
-    }
-
-    fn lex_token(&mut self) -> Result<Option<Token>, Box<dyn Error>> {
+    fn lex_token(&mut self) -> Option<Result<Token, Box<dyn Error>>> {
         self.consume_white_spaces();
-        Ok(self.peek().map(|ch| match ch {
+        Some(Ok(match self.peek_char()? {
             '_' | 'a'..='z' | 'A'..='Z' => self.lex_ident(),
             '0'..='9' => self.lex_number(),
             '\'' | '\"' => self.lex_string(),
@@ -64,9 +110,9 @@ impl<'a> Lexer<'a> {
     fn lex_ident(&mut self) -> Token {
         let mut ident = String::new();
 
-        while let ch = self.peek().expect(/* TODO */"") {
+        while let ch = self.peek_char().expect(/* TODO */"") {
             if !ch.is_alphanumeric() && ch != '_' { break; }
-            ident.push(self.consume().unwrap())
+            ident.push(self.consume_char().unwrap())
         }
 
         match ident.as_str() {
@@ -92,11 +138,11 @@ impl<'a> Lexer<'a> {
         let mut number = String::new();
         let mut found_dot = false;
 
-        while let ch = self.peek().expect(/* TODO */"") {
+        while let ch = self.peek_char().expect(/* TODO */"") {
             if !found_dot && ch == '.' {
                 found_dot = true;
             } else if !ch.is_numeric() && ch != '_' { break; }
-            number.push(self.consume().unwrap());
+            number.push(self.consume_char().unwrap());
         }
 
         if found_dot {
@@ -109,12 +155,12 @@ impl<'a> Lexer<'a> {
     fn lex_string(&mut self) -> Token {
         let mut str = String::new();
 
-        let quote = self.consume().unwrap();
+        let quote = self.consume_char().unwrap();
 
-        while let ch = self.consume().expect(/* TODO */"") {
+        while let ch = self.consume_char().expect(/* TODO */"") {
             if ch == '\\' {
                 str.push(ch);
-                str.push(self.consume().expect(/* TODO */""));
+                str.push(self.consume_char().expect(/* TODO */""));
                 continue;
             }
 
@@ -127,36 +173,36 @@ impl<'a> Lexer<'a> {
     }
 
     fn lex_special(&mut self) -> Token {
-        match self.consume().unwrap() {
+        match self.consume_char().unwrap() {
             '=' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('=') { Token::EqualEqual } else { Token::Equal }
+                if self.consume_if_eq('=') { Token::EqualEqual } else { Token::Equal }
             }
             '+' => Token::Plus,
             '-' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('>') { Token::RArrow } else { Token::Minus }
+                if self.consume_if_eq('>') { Token::RArrow } else { Token::Minus }
             }
             '*' => Token::Star,
             '/' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('/') { Token::SlashSlash } else { Token::Slash }
+                if self.consume_if_eq('/') { Token::SlashSlash } else { Token::Slash }
             }
             '%' => Token::Percent,
             '!' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('=') { Token::NotEqual } else { Token::Not }
+                if self.consume_if_eq('=') { Token::NotEqual } else { Token::Not }
             }
             '<' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('=') { return Token::LessEqual; }
-                if !self.consume_if_next('-') { return Token::Less; }
+                if self.consume_if_eq('=') { return Token::LessEqual; }
+                if !self.consume_if_eq('-') { return Token::Less; }
                 self.consume_white_spaces();
-                if self.consume_if_next('>') { Token::LRArrow } else { Token::LArrow }
+                if self.consume_if_eq('>') { Token::LRArrow } else { Token::LArrow }
             }
             '>' => {
                 self.consume_white_spaces();
-                if self.consume_if_next('=') { Token::GreaterEqual } else { Token::Greater }
+                if self.consume_if_eq('=') { Token::GreaterEqual } else { Token::Greater }
             }
             '.' => Token::Dot,
             '|' => Token::Pipe,
@@ -169,7 +215,7 @@ impl<'a> Lexer<'a> {
             ']' => Token::RBracket,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
-            _ => todo!(),
+            ch => panic!("Failed to parse character '{}' on line {}:{}", ch, self.chars.line, self.chars.col)
         }
     }
 }

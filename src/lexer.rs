@@ -220,11 +220,37 @@ impl<'a> LexIter<'a> {
     }
 }
 
-pub fn lex(source_code: &str) -> Result<Vec<Token>, Box<dyn Error>> {
-    let mut tokens = Vec::<Token>::new();
+#[test]
+fn test_simple_lexing() {
+    let source_code =
+        r#"def foo(x <- Int, y <-> String) -> Int | String:
+    return if x > 5 then x else y;
 
-    let mut lexer = Lexer::new(source_code);
-    while let Some(token) = lexer.lex_token()? { tokens.push(token); }
+let x = 2 + 2 - 1;
+let y = "str";
+let z = foo(x, y);
 
-    Ok(tokens)
+print(x, y, z);"#;
+
+    let tokens = LexIter::new(source_code)
+        .map(Result::unwrap)
+        .collect::<Vec<Token>>();
+
+    use Token::*;
+
+    assert_eq!(tokens, vec![
+        Def, Identifier("foo".to_string()), LParen,
+        Identifier("x".to_string()), LArrow, Identifier("Int".to_string()), Comma,
+        Identifier("y".to_string()), LRArrow, Identifier("String".to_string()), RParen,
+        RArrow, Identifier("Int".to_string()), Pipe, Identifier("String".to_string()), Colon,
+        Return, If, Identifier("x".to_string()), Greater, Int(5), Then, Identifier("x".to_string()), Else, Identifier("y".to_string()), Semicolon,
+        Let, Identifier("x".to_string()), Equal, Int(2), Plus, Int(2), Minus, Int(1), Semicolon,
+        Let, Identifier("y".to_string()), Equal, String("str".to_string()), Semicolon,
+        Let, Identifier("z".to_string()), Equal, Identifier("foo".to_string()), LParen,
+        Identifier("x".to_string()), Comma, Identifier("y".to_string()), RParen, Semicolon,
+        Identifier("print".to_string()), LParen,
+        Identifier("x".to_string()), Comma,
+        Identifier("y".to_string()), Comma,
+        Identifier("z".to_string()), RParen, Semicolon,
+    ])
 }

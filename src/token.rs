@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum Token {
     // Names
     Identifier(String),

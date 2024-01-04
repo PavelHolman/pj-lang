@@ -3,48 +3,8 @@ use std::iter::{Fuse, Peekable};
 use std::str::Chars;
 use crate::token::Token;
 
-trait PeekIterator {
-    type Item;
-
-    fn peek(&mut self) -> Option<Self::Item>;
-}
-
-struct CharIter<'a> {
-    inner: Peekable<Fuse<Chars<'a>>>,
-    ch: Option<char>,
-    line: usize,
-    col: usize,
-}
-
-impl Iterator for CharIter<'_> {
-    type Item = char;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let ch = self.inner.next();
-        if let Some(ch) = ch {
-            self.col += 1;
-            if ch == '\n' {
-                self.col = 1;
-                self.line += 1;
-            }
-        }
-
-        ch
-    }
-}
-
-impl PeekIterator for CharIter<'_> {
-    type Item = char;
-
-    fn peek(&mut self) -> Option<Self::Item> {
-        self.inner.peek().copied()
-    }
-}
-
-
 pub(crate) struct LexIter<'a> {
-    chars: CharIter<'a>,
-    next_res: Option<Result<Token, Box<dyn Error>>>,
+    char_iter: Peekable<Fuse<Chars<'a>>>,
 }
 
 impl Iterator for LexIter<'_> {
@@ -55,46 +15,28 @@ impl Iterator for LexIter<'_> {
     }
 }
 
-impl PeekIterator for LexIter<'_> {
-    type Item = Result<Token, Box<dyn Error>>;
-
-    fn peek(&mut self) -> Option<Self::Item> {
-        // self.next_res.or(self.next())
-        todo!()
-    }
-}
-
 
 impl<'a> LexIter<'a> {
     pub fn new(source_code: &'a str) -> Self {
         Self {
-            chars: CharIter {
-                inner: source_code.chars().fuse().peekable(),
-                ch: None,
-                line: 1,
-                col: 0,
-            },
-            next_res: None,
+            char_iter: source_code.chars().fuse().peekable(),
         }
     }
 
     fn peek_char(&mut self) -> Option<char> {
-        self.chars.peek()
+        self.char_iter.peek().copied()
     }
 
     fn consume_char(&mut self) -> Option<char> {
-        self.chars.next()
+        self.char_iter.next()
     }
 
     fn consume_white_spaces(&mut self) -> () {
-        while self.chars.peek().map_or(false, char::is_whitespace) { self.chars.next(); }
+        while let Some(ch) = self.char_iter.next_if(|ch| ch.is_whitespace()) {}
     }
 
-    fn consume_if_eq(&mut self, ch: char) -> bool {
-        if self.peek_char().expect(/* TODO */"") == ch {
-            self.consume_char().unwrap();
-            true
-        } else { false }
+    fn consume_if_eq(&mut self, ch: char) -> Option<char> {
+        self.char_iter.next_if_eq(&ch)
     }
 
     fn lex_token(&mut self) -> Option<Result<Token, Box<dyn Error>>> {
@@ -176,33 +118,33 @@ impl<'a> LexIter<'a> {
         match self.consume_char().unwrap() {
             '=' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('=') { Token::EqualEqual } else { Token::Equal }
+                if self.consume_if_eq('=').is_some() { Token::EqualEqual } else { Token::Equal }
             }
             '+' => Token::Plus,
             '-' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('>') { Token::RArrow } else { Token::Minus }
+                if self.consume_if_eq('>').is_some() { Token::RArrow } else { Token::Minus }
             }
             '*' => Token::Star,
             '/' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('/') { Token::SlashSlash } else { Token::Slash }
+                if self.consume_if_eq('/').is_some() { Token::SlashSlash } else { Token::Slash }
             }
             '%' => Token::Percent,
             '!' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('=') { Token::NotEqual } else { Token::Not }
+                if self.consume_if_eq('=').is_some() { Token::NotEqual } else { Token::Not }
             }
             '<' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('=') { return Token::LessEqual; }
-                if !self.consume_if_eq('-') { return Token::Less; }
+                if self.consume_if_eq('=').is_some() { return Token::LessEqual; }
+                if self.consume_if_eq('-').is_none() { return Token::Less; }
                 self.consume_white_spaces();
-                if self.consume_if_eq('>') { Token::LRArrow } else { Token::LArrow }
+                if self.consume_if_eq('>').is_some() { Token::LRArrow } else { Token::LArrow }
             }
             '>' => {
                 self.consume_white_spaces();
-                if self.consume_if_eq('=') { Token::GreaterEqual } else { Token::Greater }
+                if self.consume_if_eq('=').is_some() { Token::GreaterEqual } else { Token::Greater }
             }
             '.' => Token::Dot,
             '|' => Token::Pipe,
@@ -215,7 +157,7 @@ impl<'a> LexIter<'a> {
             ']' => Token::RBracket,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
-            ch => panic!("Failed to parse character '{}' on line {}:{}", ch, self.chars.line, self.chars.col)
+            _ => todo!()
         }
     }
 }

@@ -2,14 +2,14 @@ mod lexer;
 mod parser;
 mod compiler;
 mod token;
+mod node;
+mod errors;
 
 use std::error::Error;
 use std::{env, fs};
 
 fn compile(source_code: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let tokens = lexer::lex(&source_code)?;
-
-    let ast = parser::parse(&tokens)?;
+    let ast = parser::parse(source_code)?;
 
     Ok(compiler::compile(&ast)?)
 }

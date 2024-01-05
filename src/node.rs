@@ -52,12 +52,12 @@ pub enum BinaryOperator {
     And,
 
     Equal,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    SlashSlash,
-    Percent,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    DivDiv,
+    Mod,
 
     NotEqual,
     EqualEqual,

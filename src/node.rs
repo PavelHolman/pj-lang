@@ -1,4 +1,6 @@
+use std::cmp::Ordering;
 use crate::token::Token;
+
 #[derive(Debug)]
 pub enum Node {
     Value(Token),
@@ -39,14 +41,14 @@ pub enum Operator {
     Sentinel,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum UnaryOperator {
     Not,
     Plus,
     Minus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum BinaryOperator {
     Or,
     And,
@@ -67,6 +69,46 @@ pub enum BinaryOperator {
     GreaterEqual,
 }
 
+#[derive(PartialOrd, PartialEq)]
+pub enum Precedence {
+    Sentinel,
+    Assign,
+    Or,
+    And,
+    Eq,
+    Ord,
+    // Low: Add, Sub
+    ArithLow,
+    // Mid: Mul, Div, Mod
+    ArithHigh,
+    Unary,
+}
+
+impl Operator {
+    fn precedence(&self) -> Precedence {
+        match self {
+            Operator::Unary(_) => Precedence::Unary,
+            Operator::Binary(bin) => match bin {
+                BinaryOperator::Or => Precedence::Or,
+                BinaryOperator::And => Precedence::And,
+                BinaryOperator::Equal => Precedence::Assign,
+                BinaryOperator::Add | BinaryOperator::Sub => Precedence::ArithLow,
+                BinaryOperator::Mul | BinaryOperator::Div |
+                BinaryOperator::DivDiv | BinaryOperator::Mod => Precedence::ArithHigh,
+                BinaryOperator::NotEqual | BinaryOperator::EqualEqual => Precedence::Eq,
+                BinaryOperator::Less | BinaryOperator::LessEqual |
+                BinaryOperator::Greater | BinaryOperator::GreaterEqual => Precedence::Ord
+            }
+            Operator::Sentinel => Precedence::Sentinel,
+        }
+    }
+}
+
+impl PartialOrd for Operator {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.precedence().partial_cmp(&other.precedence())
+    }
+}
 
 
 pub trait ToUnary {

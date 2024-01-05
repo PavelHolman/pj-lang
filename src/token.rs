@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)] // TODO: Try to make it not necessary to have Clone
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Token {
     // Names

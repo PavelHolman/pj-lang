@@ -34,27 +34,11 @@ impl<I: FusedIterator<Item=Token>> Parser<I> {
     }
 
     fn parse_node(&mut self) -> Result<Node, Box<dyn Error>> {
-        // let tok = self.token_iterator.next().unwrap();
-        // let node = match tok {
-        //     Token::Let => self.parse_variable_decl(),
-        //     Token::Def => self.parse_function_decl(),
-        //     Token::If => self.parse_if_statement(),
-        //     _ => self.parse_expression(),
-        // }?;
-        //
-        // Ok(node)
-        panic!()
+        todo!("Parse node - statement/expression")
     }
 
-    fn parse_variable_decl(&mut self) -> Result<Node, Box<dyn Error>> { todo!() }
-
-    fn parse_function_decl(&mut self) -> Result<Node, Box<dyn Error>> { todo!() }
-
-    fn parse_if_statement(&mut self) -> Result<Node, Box<dyn Error>> { todo!() }
-
     fn parse_expression(&mut self) -> Result<Node, Box<dyn Error>> {
-        let mut expression_parser = ExpressionParser::new(&mut self.lexer);
-        expression_parser.parse()
+        todo!("Call expression parser")
     }
 }
 

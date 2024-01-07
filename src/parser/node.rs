@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use crate::lexer::token::{Token, TokenKind};
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum Node {
     Value(Token),
     Unary(UnaryNode),
@@ -9,12 +10,14 @@ pub enum Node {
 }
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct UnaryNode {
     op: UnaryOperator,
     node: Box<Node>,
 }
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct BinaryNode {
     lhs: Box<Node>,
     op: BinaryOperator,

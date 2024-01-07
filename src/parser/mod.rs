@@ -1,10 +1,13 @@
 use std::error::Error;
 use std::iter::{FusedIterator, Peekable};
+use node::Node;
 use crate::lexer::TokenIterator;
-use crate::node::Node;
 use crate::lexer::token::Token;
 
+pub mod node;
+
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct AST {
     nodes: Vec<Node>,
 }

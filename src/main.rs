@@ -1,7 +1,6 @@
 mod lexer;
 mod parser;
 mod compiler;
-mod node;
 mod errors;
 
 use std::error::Error;

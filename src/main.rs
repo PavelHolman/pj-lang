@@ -9,7 +9,9 @@ use std::error::Error;
 use std::{env, fs};
 
 fn compile(source_code: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let ast = parser::parse(source_code)?;
+    let token_iterator = lexer::TokenIterator::new(source_code);
+    // TODO: Announce lexing errors.
+    let ast = parser::parse(token_iterator.filter_map(Result::ok))?;
 
     Ok(compiler::compile(&ast)?)
 }

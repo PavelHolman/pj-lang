@@ -1,7 +1,6 @@
 mod lexer;
 mod parser;
 mod compiler;
-mod token;
 mod node;
 mod errors;
 

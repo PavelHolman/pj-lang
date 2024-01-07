@@ -1,13 +1,15 @@
 use std::error::Error;
 use std::iter::{Fuse, Peekable};
 use std::str::Chars;
-use crate::token::{Token, TokenKind};
+use token::{Token, TokenKind};
 
-pub(crate) struct LexIter<'a> {
+pub mod token;
+
+pub struct TokenIterator<'a> {
     char_iter: Peekable<Fuse<Chars<'a>>>,
 }
 
-impl Iterator for LexIter<'_> {
+impl Iterator for TokenIterator<'_> {
     type Item = Result<Token, Box<dyn Error>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -16,7 +18,7 @@ impl Iterator for LexIter<'_> {
 }
 
 
-impl<'a> LexIter<'a> {
+impl<'a> TokenIterator<'a> {
     pub fn new(source_code: &'a str) -> Self {
         Self {
             char_iter: source_code.chars().fuse().peekable(),
@@ -221,7 +223,7 @@ let z = foo(x, y);
 
 print(x, y, z);"#;
 
-    let tokens = LexIter::new(source_code)
+    let tokens = TokenIterator::new(source_code)
         .map(Result::unwrap)
         .collect::<Vec<Token>>();
 

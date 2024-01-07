@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use crate::token::Token;
+use crate::lexer::token::{Token, TokenKind};
 
 #[derive(Debug)]
 pub enum Node {
@@ -121,10 +121,10 @@ pub trait ToBinary {
 
 impl ToUnary for Token {
     fn to_unary(&self) -> Option<UnaryOperator> {
-        match self {
-            Token::Not => Some(UnaryOperator::Not),
-            Token::Plus => Some(UnaryOperator::Plus),
-            Token::Minus => Some(UnaryOperator::Minus),
+        match self.kind {
+            TokenKind::Not => Some(UnaryOperator::Not),
+            TokenKind::Plus => Some(UnaryOperator::Plus),
+            TokenKind::Minus => Some(UnaryOperator::Minus),
             _ => None,
         }
     }
@@ -132,22 +132,22 @@ impl ToUnary for Token {
 
 impl ToBinary for Token {
     fn to_binary(&self) -> Option<BinaryOperator> {
-        match self {
-            Token::Or => Some(BinaryOperator::Or),
-            Token::And => Some(BinaryOperator::And),
-            Token::Equal => Some(BinaryOperator::Equal),
-            Token::Plus => Some(BinaryOperator::Add),
-            Token::Minus => Some(BinaryOperator::Sub),
-            Token::Star => Some(BinaryOperator::Mul),
-            Token::Slash => Some(BinaryOperator::Div),
-            Token::SlashSlash => Some(BinaryOperator::DivDiv),
-            Token::Percent => Some(BinaryOperator::Mod),
-            Token::NotEqual => Some(BinaryOperator::NotEqual),
-            Token::EqualEqual => Some(BinaryOperator::EqualEqual),
-            Token::Less => Some(BinaryOperator::Less),
-            Token::LessEqual => Some(BinaryOperator::LessEqual),
-            Token::Greater => Some(BinaryOperator::Greater),
-            Token::GreaterEqual => Some(BinaryOperator::GreaterEqual),
+        match self.kind {
+            TokenKind::Or => Some(BinaryOperator::Or),
+            TokenKind::And => Some(BinaryOperator::And),
+            TokenKind::Equal => Some(BinaryOperator::Equal),
+            TokenKind::Plus => Some(BinaryOperator::Add),
+            TokenKind::Minus => Some(BinaryOperator::Sub),
+            TokenKind::Star => Some(BinaryOperator::Mul),
+            TokenKind::Slash => Some(BinaryOperator::Div),
+            TokenKind::SlashSlash => Some(BinaryOperator::DivDiv),
+            TokenKind::Percent => Some(BinaryOperator::Mod),
+            TokenKind::NotEqual => Some(BinaryOperator::NotEqual),
+            TokenKind::EqualEqual => Some(BinaryOperator::EqualEqual),
+            TokenKind::Less => Some(BinaryOperator::Less),
+            TokenKind::LessEqual => Some(BinaryOperator::LessEqual),
+            TokenKind::Greater => Some(BinaryOperator::Greater),
+            TokenKind::GreaterEqual => Some(BinaryOperator::GreaterEqual),
             _ => None
         }
     }

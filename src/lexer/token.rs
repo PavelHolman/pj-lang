@@ -66,7 +66,7 @@ pub enum TokenKind {
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct Token {
-    kind: TokenKind,
+    pub(crate) kind: TokenKind,
     // TODO: Add Span
 }
 

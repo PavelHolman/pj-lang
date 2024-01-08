@@ -1,10 +1,12 @@
 use std::error::Error;
-use std::iter::{FusedIterator, Peekable};
-use node::Node;
+use nodes::Node;
+use parser::Parser;
 use crate::lexer::TokenIterator;
-use crate::lexer::token::Token;
+use crate::lexer::tokens::{Token, TokenKind};
 
-pub mod node;
+pub mod nodes;
+pub mod parser;
+mod operators;
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
@@ -12,47 +14,33 @@ pub struct AST {
     nodes: Vec<Node>,
 }
 
-struct Parser<I: FusedIterator<Item=Token>> {
-    token_iterator: Peekable<I>,
-}
+pub fn parse(tokens: impl IntoIterator<Item=Token>) -> Result<AST, Box<dyn Error>> {
+    let token_iterator = tokens
+        .into_iter()
+        .filter(|token: &Token| !matches!(token.kind, TokenKind::Whitespace | TokenKind::NewLine))
+        .fuse()
+        .peekable();
 
-
-impl<I: FusedIterator<Item=Token>> Parser<I> {
-    fn new(token_iterator: Peekable<I>) -> Self
-    {
-        Self { token_iterator }
-    }
-
-    fn parse(mut self) -> Result<AST, Box<dyn Error>> {
-        let mut nodes = Vec::<Node>::new();
-
-        while let Some(_) = self.token_iterator.peek() {
-            nodes.push(self.parse_node()?);
-        }
-
-        Ok(AST { nodes })
-    }
-
-    fn parse_node(&mut self) -> Result<Node, Box<dyn Error>> {
-        todo!("Parse node - statement/expression")
-    }
-
-    fn parse_expression(&mut self) -> Result<Node, Box<dyn Error>> {
-        todo!("Call expression parser")
-    }
-}
-
-pub fn parse<I>(token_iterator: I) -> Result<AST, Box<dyn Error>>
-    where I: Iterator<Item=Token>
-{
-    let token_iterator = token_iterator.fuse().peekable();
     let parser = Parser::new(token_iterator);
     let ast = parser.parse()?;
 
     Ok(ast)
 }
 
-    let nodes = parser.parse()?;
+#[test]
+fn test_simple_parsing() {
+    let source_code =
+        "2 + (1 + 3);\
+        x = 2 + 1;\
+        x = x + 5;";
 
-    Ok(AST { nodes })
+
+    let token_iterator = TokenIterator::new(source_code).map(Result::unwrap);
+    let ast1 = parse(token_iterator).unwrap();
+
+    let tokens = TokenIterator::new(source_code).map(Result::unwrap).collect::<Vec<_>>();
+    let ast2 = parse(tokens).unwrap();
+
+    assert_eq!(ast1, AST { nodes: vec![] });
+    assert_eq!(ast2, AST { nodes: vec![] });
 }

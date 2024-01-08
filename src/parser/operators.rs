@@ -1,41 +1,4 @@
-use std::cmp::Ordering;
-use crate::lexer::token::{Token, TokenKind};
-
-#[derive(Debug)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum Node {
-    Value(Token),
-    Unary(UnaryNode),
-    Binary(BinaryNode),
-}
-
-#[derive(Debug)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct UnaryNode {
-    op: UnaryOperator,
-    node: Box<Node>,
-}
-
-#[derive(Debug)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct BinaryNode {
-    lhs: Box<Node>,
-    op: BinaryOperator,
-    rhs: Box<Node>,
-}
-
-impl UnaryNode {
-    pub(crate) fn new(op: UnaryOperator, node: Node) -> Self {
-        Self { op, node: node.into() }
-    }
-}
-
-impl BinaryNode {
-    pub(crate) fn new(op: BinaryOperator, lhs: Node, rhs: Node) -> Self {
-        Self { op, lhs: lhs.into(), rhs: rhs.into() }
-    }
-}
-
+use crate::lexer::tokens::{Token, TokenKind};
 
 #[derive(Debug, PartialEq)]
 pub enum Operator {
@@ -108,7 +71,7 @@ impl Operator {
 }
 
 impl PartialOrd for Operator {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.precedence().partial_cmp(&other.precedence())
     }
 }

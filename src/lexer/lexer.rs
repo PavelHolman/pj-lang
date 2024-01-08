@@ -88,8 +88,12 @@ impl<'a> Lexer<'a> {
     }
 
     fn consume_newline(&mut self) -> Result<TokenKind, Box<dyn Error>> {
-        self.consume_char();
-        Ok(TokenKind::NewLine) // TODO: deal with \r\n etc.
+        if self.consume_char().unwrap() == '\r' {
+            self.consumed_char_if_eq('\n');
+        } else {
+            self.consume_char();
+        }
+        Ok(TokenKind::NewLine)
     }
 
     fn consume_whitespace(&mut self) -> Result<TokenKind, Box<dyn Error>> {

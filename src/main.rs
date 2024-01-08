@@ -5,9 +5,10 @@ mod errors;
 
 use std::error::Error;
 use std::{env, fs};
+use lexer::Lexer;
 
 fn compile(source_code: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let lexer = lexer::Lexer::new(source_code);
+    let lexer = Lexer::new(source_code);
     // TODO: Announce lexing errors.
     let ast = parser::parse(lexer.filter_map(Result::ok))?;
 

@@ -5,11 +5,11 @@ use tokens::{Token, TokenKind};
 
 pub mod tokens;
 
-pub struct TokenIterator<'a> {
+pub struct Lexer<'a> {
     char_iter: Peekable<Fuse<Chars<'a>>>,
 }
 
-impl Iterator for TokenIterator<'_> {
+impl Iterator for Lexer<'_> {
     type Item = Result<Token, Box<dyn Error>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -18,7 +18,7 @@ impl Iterator for TokenIterator<'_> {
 }
 
 
-impl<'a> TokenIterator<'a> {
+impl<'a> Lexer<'a> {
     pub fn new(source_code: &'a str) -> Self {
         Self {
             char_iter: source_code.chars().fuse().peekable(),
@@ -223,7 +223,7 @@ let z = foo(x, y);
 
 print(x, y, z);"#;
 
-    let tokens = TokenIterator::new(source_code)
+    let tokens = Lexer::new(source_code)
         .map(Result::unwrap)
         .collect::<Vec<Token>>();
 

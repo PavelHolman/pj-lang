@@ -1,7 +1,7 @@
 use std::error::Error;
 use nodes::Node;
 use parser::Parser;
-use crate::lexer::TokenIterator;
+use crate::lexer::Lexer;
 use crate::lexer::tokens::{Token, TokenKind};
 
 pub mod nodes;
@@ -35,10 +35,10 @@ fn test_simple_parsing() {
         x = x + 5;";
 
 
-    let token_iterator = TokenIterator::new(source_code).map(Result::unwrap);
-    let ast1 = parse(token_iterator).unwrap();
+    let lexer = Lexer::new(source_code).map(Result::unwrap);
+    let ast1 = parse(lexer).unwrap();
 
-    let tokens = TokenIterator::new(source_code).map(Result::unwrap).collect::<Vec<_>>();
+    let tokens = Lexer::new(source_code).map(Result::unwrap).collect::<Vec<_>>();
     let ast2 = parse(tokens).unwrap();
 
     assert_eq!(ast1, AST { nodes: vec![] });

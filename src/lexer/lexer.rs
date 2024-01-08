@@ -83,7 +83,7 @@ impl<'a> Lexer<'a> {
         self.char_iter.next()
     }
 
-    fn consumed_next_if_eq(&mut self, c: char) -> bool {
+    fn consumed_char_if_eq(&mut self, c: char) -> bool {
         self.char_iter.next_if_eq(&c).is_some()
     }
 
@@ -163,28 +163,28 @@ impl<'a> Lexer<'a> {
     }
     fn consume_punctuation(&mut self) -> Result<TokenKind, Box<dyn Error>> {
         Ok(match self.consume_char().unwrap() {
-            '=' => if self.consumed_next_if_eq('=') { TokenKind::EqualEqual } else { TokenKind::Equal },
+            '=' => if self.consumed_char_if_eq('=') { TokenKind::EqualEqual } else { TokenKind::Equal },
 
             '+' => TokenKind::Plus,
-            '-' => if self.consumed_next_if_eq('>') { TokenKind::RArrow } else { TokenKind::Minus },
-            '*' => if self.consumed_next_if_eq('*') { TokenKind::StarStar } else { TokenKind::Star },
-            '/' => if self.consumed_next_if_eq('/') { TokenKind::SlashSlash } else { TokenKind::Slash },
+            '-' => if self.consumed_char_if_eq('>') { TokenKind::RArrow } else { TokenKind::Minus },
+            '*' => if self.consumed_char_if_eq('*') { TokenKind::StarStar } else { TokenKind::Star },
+            '/' => if self.consumed_char_if_eq('/') { TokenKind::SlashSlash } else { TokenKind::Slash },
             '%' => TokenKind::Percent,
 
-            '!' => if self.consumed_next_if_eq('=') { TokenKind::NotEqual } else { TokenKind::Not },
-            '<' => if self.consumed_next_if_eq('=') {
+            '!' => if self.consumed_char_if_eq('=') { TokenKind::NotEqual } else { TokenKind::Not },
+            '<' => if self.consumed_char_if_eq('=') {
                 TokenKind::LessEqual
-            } else if !self.consumed_next_if_eq('-') {
+            } else if !self.consumed_char_if_eq('-') {
                 TokenKind::Less
-            } else if self.consumed_next_if_eq('>') {
+            } else if self.consumed_char_if_eq('>') {
                 TokenKind::LRArrow
             } else {
                 TokenKind::LArrow
             }
-            '>' => if self.consumed_next_if_eq('=') { TokenKind::GreaterEqual } else { TokenKind::Greater },
+            '>' => if self.consumed_char_if_eq('=') { TokenKind::GreaterEqual } else { TokenKind::Greater },
 
-            '&' => if self.consumed_next_if_eq('&') { TokenKind::And } else { TokenKind::Amp },
-            '|' => if self.consumed_next_if_eq('|') { TokenKind::Or } else { TokenKind::Pipe },
+            '&' => if self.consumed_char_if_eq('&') { TokenKind::And } else { TokenKind::Amp },
+            '|' => if self.consumed_char_if_eq('|') { TokenKind::Or } else { TokenKind::Pipe },
 
             '.' => TokenKind::Dot,
             ',' => TokenKind::Comma,

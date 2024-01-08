@@ -1,4 +1,3 @@
-use std::error::Error;
 pub use lexer::Lexer;
 use tokens::{Token, TokenKind};
 

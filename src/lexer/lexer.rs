@@ -172,20 +172,14 @@ impl<'a> Lexer<'a> {
             '%' => TokenKind::Percent,
 
             '!' => if self.consumed_next_if_eq('=') { TokenKind::NotEqual } else { TokenKind::Not },
-            '<' => { // TODO: Simplify this abomination :D
-                if self.consumed_next_if_eq('=') {
-                    TokenKind::LessEqual
-                } else {
-                    if self.consumed_next_if_eq('-') {
-                        if self.consumed_next_if_eq('>') {
-                            TokenKind::LRArrow
-                        } else {
-                            TokenKind::LArrow
-                        }
-                    } else {
-                        TokenKind::Less
-                    }
-                }
+            '<' => if self.consumed_next_if_eq('=') {
+                TokenKind::LessEqual
+            } else if !self.consumed_next_if_eq('-') {
+                TokenKind::Less
+            } else if self.consumed_next_if_eq('>') {
+                TokenKind::LRArrow
+            } else {
+                TokenKind::LArrow
             }
             '>' => if self.consumed_next_if_eq('=') { TokenKind::GreaterEqual } else { TokenKind::Greater },
 

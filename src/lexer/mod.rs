@@ -1,9 +1,9 @@
 use std::error::Error;
 use std::iter::{Fuse, Peekable};
 use std::str::Chars;
-use token::{Token, TokenKind};
+use tokens::{Token, TokenKind};
 
-pub mod token;
+pub mod tokens;
 
 pub struct TokenIterator<'a> {
     char_iter: Peekable<Fuse<Chars<'a>>>,

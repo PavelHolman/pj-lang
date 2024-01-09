@@ -51,7 +51,7 @@ pub enum Precedence {
 }
 
 impl Operator {
-    fn precedence(&self) -> Precedence {
+    pub(crate) fn precedence(&self) -> Precedence {
         match self {
             Operator::Unary(_) => Precedence::Unary,
             Operator::Binary(bin) => match bin {
@@ -69,13 +69,6 @@ impl Operator {
         }
     }
 }
-
-impl PartialOrd for Operator {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.precedence().partial_cmp(&other.precedence())
-    }
-}
-
 
 pub trait ToUnary {
     fn to_unary(&self) -> Option<UnaryOperator>;

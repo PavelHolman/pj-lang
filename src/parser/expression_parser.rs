@@ -20,6 +20,9 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
         }
     }
 
+    /// The parsing algorithm used is almost identical to
+    /// Recursive-descent recognition algorithm described here:
+    /// https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#RDP.
     pub(crate) fn parse(mut self) -> Result<Node, Box<dyn Error>> {
         self.parse_expr()?;
         if !matches!(self.token_iterator.peek().ok_or("Error")?.kind, TokenKind::Semicolon) { todo!("Error") }

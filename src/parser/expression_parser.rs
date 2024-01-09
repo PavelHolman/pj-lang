@@ -49,7 +49,11 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
         let tok = self.token_iterator.next().ok_or("")?;
 
         match tok.kind {
-            TokenKind::Identifier(ident) => self.operand_stack.push(Node::Value(ValueNode::Identifier(ident))),
+            TokenKind::Identifier(ident) => self.operand_stack.push(
+                match self.token_iterator.peek().ok_or("")?.kind {
+                    TokenKind::LParen => self.parse_call()?,
+                    _ => Node::Value(ValueNode::Identifier(ident)),
+                }),
             TokenKind::Int(int) => self.operand_stack.push(Node::Value(ValueNode::Int(int))),
             TokenKind::Float(float) => self.operand_stack.push(Node::Value(ValueNode::Float(float))),
             TokenKind::Bool(bool) => self.operand_stack.push(Node::Value(ValueNode::Bool(bool))),
@@ -72,6 +76,10 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
         }
 
         Ok(())
+    }
+
+    fn parse_call(&mut self) -> Result<Node, Box<dyn Error>> {
+        todo!()
     }
 
     fn pop_operator(&mut self) {

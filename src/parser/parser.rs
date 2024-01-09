@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::iter::{FusedIterator, Peekable};
-use crate::lexer::tokens::Token;
+use crate::lexer::tokens::{Token, TokenKind};
 use crate::parser::{AST, expression_parser};
 use crate::parser::nodes::Node;
 
@@ -25,7 +25,18 @@ impl<I: FusedIterator<Item=Token>> Parser<I> {
     }
 
     fn parse_node(&mut self) -> Result<Node, Box<dyn Error>> {
-        todo!("Parse node - statement/expression")
+        match self.token_iterator.peek().unwrap().kind {
+            TokenKind::Def => self.parse_definition(),
+            _ => self.parse_statement(),
+        }
+    }
+
+    fn parse_definition(&mut self) -> Result<Node, Box<dyn Error>> {
+        todo!("Functions, aliases, structs, enums")
+    }
+
+    fn parse_statement(&mut self) -> Result<Node, Box<dyn Error>> {
+        // todo!("Let, Return, ...")
     }
 
     fn parse_expression(&mut self) -> Result<Node, Box<dyn Error>> {

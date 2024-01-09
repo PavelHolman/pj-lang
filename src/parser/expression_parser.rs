@@ -20,12 +20,13 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
         }
     }
 
-    /// The parsing algorithm used is almost identical to
-    /// Recursive-descent recognition algorithm described here:
-    /// https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#RDP.
+    /// The parsing algorithm used is directly inspired by
+    /// The shunting yard algorithm described here:
+    /// https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#shunting_yard.
     pub(crate) fn parse(mut self) -> Result<Node, Box<dyn Error>> {
         self.parse_expr()?;
         if !matches!(self.token_iterator.peek().ok_or("Error")?.kind, TokenKind::Semicolon) { todo!("Error") }
+        self.token_iterator.next();
 
         Ok(self.operand_stack.pop().unwrap())
     }
@@ -35,13 +36,11 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
 
         while let Some(binary_op) = self.token_iterator.peek().ok_or("Error")?.to_binary() {
             self.push_operator(Operator::Binary(binary_op));
-            self.parse_primary()?;
             self.token_iterator.next();
+            self.parse_primary()?;
         }
 
-        while !matches!(self.operator_stack.last().unwrap(), Operator::Sentinel) {
-            self.pop_operator();
-        }
+        while !matches!(self.operator_stack.last().unwrap(), Operator::Sentinel) { self.pop_operator(); }
 
         Ok(())
     }
@@ -60,7 +59,8 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
                 self.operator_stack.push(Operator::Sentinel);
                 self.parse_expr()?;
                 if !matches!(self.token_iterator.peek().ok_or("Error")?.kind, TokenKind::RParen) { todo!("Error") }
-                self.operand_stack.pop();
+                self.token_iterator.next();
+                self.operator_stack.pop();
             }
 
             _ if tok.to_unary().is_some() => {

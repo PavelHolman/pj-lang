@@ -7,6 +7,7 @@ use crate::lexer::tokens::{Token, TokenKind};
 pub mod nodes;
 pub mod parser;
 mod operators;
+mod expression_parser;
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]

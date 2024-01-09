@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::iter::{FusedIterator, Peekable};
 use crate::lexer::tokens::Token;
-use crate::parser::AST;
+use crate::parser::{AST, expression_parser};
 use crate::parser::nodes::Node;
 
 pub(crate) struct Parser<I: FusedIterator<Item=Token>> {
@@ -29,6 +29,7 @@ impl<I: FusedIterator<Item=Token>> Parser<I> {
     }
 
     fn parse_expression(&mut self) -> Result<Node, Box<dyn Error>> {
-        todo!("Call expression parser")
+        let parser = expression_parser::ExpressionParser::new(&mut self.token_iterator);
+        parser.parse()
     }
 }

@@ -3,6 +3,8 @@ use nodes::Node;
 use parser::Parser;
 use crate::lexer::Lexer;
 use crate::lexer::tokens::{Token, TokenKind};
+use crate::parser::nodes::{BinaryNode, ValueNode};
+use crate::parser::operators::BinaryOperator;
 
 pub mod nodes;
 pub mod parser;
@@ -32,16 +34,22 @@ pub fn parse(tokens: impl IntoIterator<Item=Token>) -> Result<AST, Box<dyn Error
 fn test_simple_parsing() {
     let source_code =
         "2 + (1 + 3);\
-        x = 2 + 1;\
-        x = x + 5;";
+        (2 + 1) + 3;";
 
+    let ast1 = parse(Lexer::new(source_code).map(Result::unwrap)).unwrap();
 
-    let lexer = Lexer::new(source_code).map(Result::unwrap);
-    let ast1 = parse(lexer).unwrap();
-
-    let tokens = Lexer::new(source_code).map(Result::unwrap).collect::<Vec<_>>();
-    let ast2 = parse(tokens).unwrap();
-
-    assert_eq!(ast1, AST { nodes: vec![] });
-    assert_eq!(ast2, AST { nodes: vec![] });
+    assert_eq!(ast1, AST {
+        nodes: vec![Node::Binary(BinaryNode::new(BinaryOperator::Add,
+                                                 Node::Value(ValueNode::Int(2)),
+                                                 Node::Binary(BinaryNode::new(
+                                                     BinaryOperator::Add,
+                                                     Node::Value(ValueNode::Int(1)),
+                                                     Node::Value(ValueNode::Int(3)))))),
+                    Node::Binary(BinaryNode::new(BinaryOperator::Add,
+                                                 Node::Binary(BinaryNode::new(
+                                                     BinaryOperator::Add,
+                                                     Node::Value(ValueNode::Int(2)),
+                                                     Node::Value(ValueNode::Int(1)))),
+                                                 Node::Value(ValueNode::Int(3))))],
+    });
 }

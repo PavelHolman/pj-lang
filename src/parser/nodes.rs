@@ -1,12 +1,21 @@
 use crate::parser::operators::{BinaryOperator, UnaryOperator};
-use crate::lexer::tokens::Token;
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Node {
-    Value(Token),
+    Value(ValueNode),
     Unary(UnaryNode),
     Binary(BinaryNode),
+}
+
+#[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+pub enum ValueNode {
+    Identifier(String),
+    Int(i64),
+    Float(f64),
+    Bool(bool),
+    String(String),
 }
 
 #[derive(Debug)]

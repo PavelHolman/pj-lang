@@ -23,12 +23,12 @@ impl<I: FusedIterator<Item=char>> Lexer<I> {
     fn next_token(&mut self) -> Option<Result<Token, Box<dyn Error>>> {
         let kind = self.peek_char().map(|c| {
             match c {
-                _ if Self::is_newline_start(c) => self.consume_newline(),
-                _ if Self::is_whitespace_start(c) => self.consume_whitespace(),
-                _ if Self::is_number_start(c) => self.consume_number(),
-                _ if Self::is_identifier_start(c) => self.consume_identifier(),
-                _ if Self::is_string_start(c) => self.consume_string(),
-                _ if Self::is_punctuation_start(c) => self.consume_punctuation(),
+                _ if Self::is_start_of_newline(c) => self.consume_newline(),
+                _ if Self::is_start_of_whitespace(c) => self.consume_whitespace(),
+                _ if Self::is_start_of_number(c) => self.consume_number(),
+                _ if Self::is_start_of_identifier(c) => self.consume_identifier(),
+                _ if Self::is_start_of_string(c) => self.consume_string(),
+                _ if Self::is_start_of_punctuation(c) => self.consume_punctuation(),
                 _ => todo!("Error: Unknown token"),
             }
         });
@@ -37,35 +37,35 @@ impl<I: FusedIterator<Item=char>> Lexer<I> {
     }
 
 
-    fn is_newline_start(c: char) -> bool {
-        c == '\n'
+    fn is_start_of_newline(c: char) -> bool {
+        c == '\n' || c == '\r'
     }
 
-    fn is_whitespace_start(c: char) -> bool {
+    fn is_start_of_whitespace(c: char) -> bool {
         c.is_whitespace()
     }
 
-    fn is_number_start(c: char) -> bool {
+    fn is_start_of_number(c: char) -> bool {
         c.is_digit(10)
     }
 
-    fn is_number_cont(c: char) -> bool {
+    fn is_continuation_of_number(c: char) -> bool {
         c.is_digit(10) || c == '.' || c == '_'
     }
 
-    fn is_identifier_start(c: char) -> bool {
+    fn is_start_of_identifier(c: char) -> bool {
         c == '_' || c.is_alphabetic()
     }
 
-    fn is_identifier_cont(c: char) -> bool {
+    fn is_continuation_of_identifier(c: char) -> bool {
         c == '_' || c.is_alphanumeric()
     }
 
-    fn is_string_start(c: char) -> bool {
+    fn is_start_of_string(c: char) -> bool {
         matches!(c, '\'' | '\"')
     }
 
-    fn is_punctuation_start(c: char) -> bool {
+    fn is_start_of_punctuation(c: char) -> bool {
         matches!(c, '=' | '+' | '-' | '*' | '/' | '%'
                   | '!' | '<' | '>' | '&' | '|'
                   | '.' | ',' | ':' | ';'
@@ -102,7 +102,7 @@ impl<I: FusedIterator<Item=char>> Lexer<I> {
     fn consume_identifier(&mut self) -> Result<TokenKind, Box<dyn Error>> {
         let mut identifier = String::new();
         while let Some(c) = self.peek_char() {
-            if Self::is_identifier_cont(c) {
+            if Self::is_continuation_of_identifier(c) {
                 self.consume_char();
                 identifier.push(c);
             } else {
@@ -128,7 +128,7 @@ impl<I: FusedIterator<Item=char>> Lexer<I> {
         let mut number = String::new();
         let mut found_dot = false;
         while let Some(c) = self.peek_char() {
-            if Self::is_number_cont(c) {
+            if Self::is_continuation_of_number(c) {
                 self.consume_char();
                 number.push(c);
             } else if c == '.' && !found_dot {

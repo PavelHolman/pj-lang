@@ -1,7 +1,7 @@
 use std::error::Error;
 use nodes::Node;
 use parser::Parser;
-use crate::lexer::Lexer;
+use crate::lexer::lex;
 use crate::lexer::tokens::{Token, TokenKind};
 use crate::parser::nodes::{BinaryNode, ValueNode};
 use crate::parser::operators::BinaryOperator;
@@ -17,7 +17,7 @@ pub struct AST {
     nodes: Vec<Node>,
 }
 
-pub fn parse(tokens: impl IntoIterator<Item=Token>) -> Result<AST, Box<dyn Error>> {
+pub fn parse(tokens: impl IntoIterator<Item=Token>) -> impl Iterator<Item=Result<Node, Box<dyn Error>>> {
     let token_iterator = tokens
         .into_iter()
         .filter(|token: &Token| !matches!(token.kind, TokenKind::Whitespace | TokenKind::NewLine))
@@ -25,9 +25,7 @@ pub fn parse(tokens: impl IntoIterator<Item=Token>) -> Result<AST, Box<dyn Error
         .peekable();
 
     let parser = Parser::new(token_iterator);
-    let ast = parser.parse()?;
-
-    Ok(ast)
+    parser
 }
 
 #[test]
@@ -36,20 +34,18 @@ fn test_simple_parsing() {
         "2 + (1 + 3);\
         (2 + 1) + 3;";
 
-    let ast1 = parse(Lexer::new(source_code).map(Result::unwrap)).unwrap();
+    let nodes = parse(lex(source_code.chars()).map(Result::unwrap)).map(Result::unwrap).collect::<Vec<Node>>();
 
-    assert_eq!(ast1, AST {
-        nodes: vec![Node::Binary(BinaryNode::new(BinaryOperator::Add,
-                                                 Node::Value(ValueNode::Int(2)),
-                                                 Node::Binary(BinaryNode::new(
-                                                     BinaryOperator::Add,
-                                                     Node::Value(ValueNode::Int(1)),
-                                                     Node::Value(ValueNode::Int(3)))))),
-                    Node::Binary(BinaryNode::new(BinaryOperator::Add,
-                                                 Node::Binary(BinaryNode::new(
-                                                     BinaryOperator::Add,
-                                                     Node::Value(ValueNode::Int(2)),
-                                                     Node::Value(ValueNode::Int(1)))),
-                                                 Node::Value(ValueNode::Int(3))))],
-    });
+    assert_eq!(nodes, vec![Node::Binary(BinaryNode::new(BinaryOperator::Add,
+                                                       Node::Value(ValueNode::Int(2)),
+                                                       Node::Binary(BinaryNode::new(
+                                                           BinaryOperator::Add,
+                                                           Node::Value(ValueNode::Int(1)),
+                                                           Node::Value(ValueNode::Int(3)))))),
+                          Node::Binary(BinaryNode::new(BinaryOperator::Add,
+                                                       Node::Binary(BinaryNode::new(
+                                                           BinaryOperator::Add,
+                                                           Node::Value(ValueNode::Int(2)),
+                                                           Node::Value(ValueNode::Int(1)))),
+                                                       Node::Value(ValueNode::Int(3))))]);
 }

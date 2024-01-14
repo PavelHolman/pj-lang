@@ -1,34 +1,35 @@
 use std::error::Error;
 use std::iter::{FusedIterator, Peekable};
 use crate::lexer::tokens::{Token, TokenKind};
-use crate::parser::{AST, expression_parser};
+use crate::parser::expression_parser;
 use crate::parser::nodes::Node;
 
-pub(crate) struct Parser<I: FusedIterator<Item=Token>> {
+pub struct Parser<I: FusedIterator<Item=Token>> {
     token_iterator: Peekable<I>,
+}
+
+impl<I: FusedIterator<Item=Token>> Iterator for Parser<I> {
+    type Item = Result<Node, Box<dyn Error>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.parse_node()
+    }
 }
 
 
 impl<I: FusedIterator<Item=Token>> Parser<I> {
-    pub(crate) fn new(token_iterator: Peekable<I>) -> Self {
+    pub fn new(token_iterator: Peekable<I>) -> Self {
         Self { token_iterator }
     }
 
-    pub(crate) fn parse(mut self) -> Result<AST, Box<dyn Error>> {
-        let mut nodes = Vec::<Node>::new();
+    fn parse_node(&mut self) -> Option<Result<Node, Box<dyn Error>>> {
+        let token = self.token_iterator.peek();
 
-        while let Some(_) = self.token_iterator.peek() {
-            nodes.push(self.parse_node()?);
-        }
-
-        Ok(AST { nodes })
-    }
-
-    fn parse_node(&mut self) -> Result<Node, Box<dyn Error>> {
-        match self.token_iterator.peek().unwrap().kind {
+        Some(match token?.kind {
             TokenKind::Def => self.parse_definition(),
-            _ => self.parse_statement(),
-        }
+            // TokenKind::Let => self.parse_let_statement(),
+            _ => self.parse_expression(),
+        })
     }
 
     fn parse_definition(&mut self) -> Result<Node, Box<dyn Error>> {

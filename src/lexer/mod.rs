@@ -1,9 +1,19 @@
-pub use lexer::Lexer;
+use std::error::Error;
 use tokens::{Token, TokenKind};
+pub use crate::lexer::lexer::Lexer;
 
 pub mod lexer;
 pub mod tokens;
 
+
+pub fn lex(source_code_char_iter: impl Iterator<Item=char>) -> impl Iterator<Item=Result<Token, Box<dyn Error>>> {
+    let source_code_char_iter = source_code_char_iter
+        .fuse()
+        .peekable();
+
+    let lexer = Lexer::new(source_code_char_iter);
+    lexer
+}
 
 #[test]
 fn test_simple_lexing() {
@@ -17,7 +27,7 @@ let z = foo(x, y);
 
 print(x, y, z);"#;
 
-    let tokens = Lexer::new(source_code)
+    let tokens = lex(source_code.chars())
         .map(Result::unwrap)
         .collect::<Vec<Token>>();
 

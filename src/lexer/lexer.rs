@@ -1,13 +1,12 @@
 use std::error::Error;
-use std::iter::{Fuse, Peekable};
-use std::str::Chars;
+use std::iter::{FusedIterator, Peekable};
 use crate::lexer::tokens::{Token, TokenKind};
 
-pub struct Lexer<'a> {
-    char_iter: Peekable<Fuse<Chars<'a>>>,
+pub struct Lexer<I: FusedIterator<Item=char>> {
+    char_iter: Peekable<I>,
 }
 
-impl Iterator for Lexer<'_> {
+impl<I: FusedIterator<Item=char>> Iterator for Lexer<I> {
     type Item = Result<Token, Box<dyn Error>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -16,11 +15,9 @@ impl Iterator for Lexer<'_> {
 }
 
 
-impl<'a> Lexer<'a> {
-    pub fn new(source_code: &'a str) -> Self {
-        Self {
-            char_iter: source_code.chars().fuse().peekable(),
-        }
+impl<I: FusedIterator<Item=char>> Lexer<I> {
+    pub fn new(char_iter: Peekable<I>) -> Self {
+        Self { char_iter }
     }
 
     fn next_token(&mut self) -> Option<Result<Token, Box<dyn Error>>> {

@@ -25,7 +25,7 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
     /// https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#shunting_yard.
     pub(crate) fn parse(mut self) -> Result<Node, Box<dyn Error>> {
         self.parse_expr()?;
-        if !matches!(self.token_iterator.peek().ok_or("Error")?.kind, TokenKind::Semicolon) { todo!("Error") }
+        if !matches!(self.token_iterator.peek().expect(/* TODO */"err").kind, TokenKind::Semicolon) { todo!("") }
         self.token_iterator.next();
 
         Ok(self.operand_stack.pop().unwrap())
@@ -34,7 +34,7 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
     fn parse_expr(&mut self) -> Result<(), Box<dyn Error>> {
         self.parse_primary()?;
 
-        while let Some(binary_op) = self.token_iterator.peek().ok_or("Error")?.to_binary() {
+        while let Some(binary_op) = self.token_iterator.peek().expect(/* TODO */"err").to_binary() {
             self.push_operator(Operator::Binary(binary_op));
             self.token_iterator.next();
             self.parse_primary()?;
@@ -46,11 +46,11 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
     }
 
     fn parse_primary(&mut self) -> Result<(), Box<dyn Error>> {
-        let tok = self.token_iterator.next().ok_or("")?;
+        let tok = self.token_iterator.next().expect(/* TODO */"err");
 
         match tok.kind {
             TokenKind::Identifier(ident) => {
-                let node = match self.token_iterator.peek().ok_or("")?.kind {
+                let node = match self.token_iterator.peek().expect(/* TODO */"err").kind {
                     TokenKind::LParen => self.parse_call()?,
                     _ => Node::Value(ValueNode::Identifier(ident)),
                 };
@@ -65,7 +65,7 @@ impl<'a, I: Iterator<Item=Token>> ExpressionParser<'a, I>
             TokenKind::LParen => {
                 self.operator_stack.push(Operator::Sentinel);
                 self.parse_expr()?;
-                if !matches!(self.token_iterator.peek().ok_or("Error")?.kind, TokenKind::RParen) { todo!("Error") }
+                if !matches!(self.token_iterator.peek().expect(/* TODO */"err").kind, TokenKind::RParen) { todo!("Error") }
                 self.token_iterator.next();
                 self.operator_stack.pop();
             }

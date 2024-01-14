@@ -88,11 +88,12 @@ impl<'a> Lexer<'a> {
     }
 
     fn consume_newline(&mut self) -> Result<TokenKind, Box<dyn Error>> {
-        if self.consume_char().unwrap() == '\r' {
-            self.consumed_char_if_eq('\n');
-        } else {
-            self.consume_char();
+        match self.consume_char().unwrap() {
+            '\n' => (),
+            '\r' => { self.consumed_char_if_eq('\n'); }
+            _ => unreachable!("Only start of new line characters can reach this function."),
         }
+
         Ok(TokenKind::NewLine)
     }
 

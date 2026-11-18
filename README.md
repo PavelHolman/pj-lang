@@ -1,4 +1,8 @@
 # The PJ Programming Language
+
+> **Status:** an unfinished language-design experiment in Rust, paused in January 2024. The lexer and the expression
+> parser exist, with tests; code generation was never started, and the last commits stop midway through a parser
+> refactor, so the project doesn't build. The rest of this README is the language design as planned.
 The compiler for the PJ Programming Language.
 
 PJ Programming Language will be high-level general-purpose strongly typed programming language with very simple syntax.
